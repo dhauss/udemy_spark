@@ -4,6 +4,8 @@ import java.util.List;
 import java.util.ArrayList;
 
 import org.apache.spark.SparkConf;
+import org.apache.spark.api.java.JavaSparkContext;
+
 
 public class Main {
 
@@ -15,7 +17,7 @@ public class Main {
 		inputData.add(4.39);
 		
 		SparkConf conf =  new SparkConf().setAppName("startingSpark").setMaster("local[*]");
-
+		JavaSparkContext sc = new JavaSparkContext(conf);
 
 	}
 
