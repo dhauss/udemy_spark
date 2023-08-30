@@ -39,7 +39,7 @@
 				<configuration>
 					<archive>
 						<manifest>
-							<mainClass>com.virtualpairprogrammers.Main</mainClass>
+							<mainClass>udemy_spark.Main</mainClass>
 						</manifest>
 					</archive>
 				</configuration>
