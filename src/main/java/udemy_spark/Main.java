@@ -2,6 +2,7 @@ package udemy_spark;
 
 import java.util.List;
 import java.util.ArrayList;
+import java.util.Arrays;
 
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
@@ -20,7 +21,7 @@ public class Main {
 		inputData.add(12);
 		inputData.add(398);
 		inputData.add(4);
-		
+
 		Logger.getLogger("org.apache").setLevel(Level.WARN);
 		SparkConf conf =  new SparkConf().setAppName("startingSpark").setMaster("local[*]");
 		JavaSparkContext sc = new JavaSparkContext(conf);
@@ -30,14 +31,14 @@ public class Main {
 		JavaRDD<Tuple2<Integer, Double>> rootPairs = OGIntegers.map(val -> new Tuple2<>(val, Math.sqrt(val)));
 		// roots.foreach(root -> System.out.println(root));
 		//roots.collect().forEach(System.out::println);
-		
+
 		/*  Count function and vanilla count
 		System.out.println(roots.count());
 		JavaRDD<Long> counter = OGIntegers.map(val -> 1L);
 		Long countRes = counter.reduce((val1, val2) -> val1 + val2);
 		System.out.println("Count: " + countRes);
 		 */
-		
+
 		List<String> logData = new ArrayList<>();
 		logData.add("WARN: Tuesday 4 September 0405");
 		logData.add("ERROR: Tuesday 4 September 0408");
@@ -54,16 +55,23 @@ public class Main {
 			return new Tuple2<>(level, date);
 		});
 		*/
-		
+
 		//count log message instances
 		JavaPairRDD<String, Long>  logInstances = sc.parallelize(logData).mapToPair(rawVal -> {
 			String level = rawVal.split(":")[0];
 			return new Tuple2<>(level, 1L);
 		});
-		
+
 		logInstances.reduceByKey((val1, val2) -> val1 + val2)
 			.foreach(tup -> System.out.println("Message: " + tup._1 + ", Count: " + tup._2));
 
+		//Flat Map and Filter
+		JavaRDD<String> sentences = sc.parallelize(logData);
+		JavaRDD<String> words = sentences.flatMap(val -> Arrays.asList(val.split(" ")).iterator());
+
+		JavaRDD<String> filteredWords = words.filter(word -> word.length() > 1);
+
+		filteredWords.foreach(val -> System.out.println(val));
 		sc.close();
 	}
 }
