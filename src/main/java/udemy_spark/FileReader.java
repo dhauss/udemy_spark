@@ -31,10 +31,8 @@ public class FileReader {
 				
 		JavaRDD<String> interestingWords = wordsOnly.filter(word -> Util.isNotBoring(word));
 				
-		JavaPairRDD<String, Long> wordInstances = interestingWords
-				.mapToPair(word -> new Tuple2<String, Long>(word, 1L));
-		
-		JavaPairRDD<String, Long> wordCountTotals = wordInstances
+		JavaPairRDD<String, Long> wordCountTotals = interestingWords
+				.mapToPair(word -> new Tuple2<String, Long>(word, 1L))
 				.reduceByKey((val1, val2) -> val1 + val2);
 		
 		JavaPairRDD<Long, String> totalsSwitchedSorted = wordCountTotals
