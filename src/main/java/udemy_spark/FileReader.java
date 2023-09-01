@@ -42,9 +42,6 @@ public class FileReader {
 				.sortByKey(false);
 		
 		totalsSwitchedSorted.take(10).forEach(System.out::println);
-
-
-		
 	}
 
 }
