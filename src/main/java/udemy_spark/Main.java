@@ -1,7 +1,5 @@
 package udemy_spark;
 
-import java.util.List;
-import java.util.ArrayList;
 import java.util.Arrays;
 
 import org.apache.log4j.Level;
@@ -16,62 +14,32 @@ import scala.Tuple2;
 public class Main {
 
 	public static void main(String[] args) {
-		List<Integer> inputData = new ArrayList<>();
-		inputData.add(35);
-		inputData.add(12);
-		inputData.add(398);
-		inputData.add(4);
-
 		Logger.getLogger("org.apache").setLevel(Level.WARN);
-		SparkConf conf =  new SparkConf().setAppName("startingSpark").setMaster("local[*]");
+		SparkConf conf = new SparkConf().setAppName("EMRCluster");
 		JavaSparkContext sc = new JavaSparkContext(conf);
-
-		JavaRDD<Integer> OGIntegers = sc.parallelize(inputData);
-		JavaRDD<Double> roots = OGIntegers.map(Math::sqrt);
-		JavaRDD<Tuple2<Integer, Double>> rootPairs = OGIntegers.map(val -> new Tuple2<>(val, Math.sqrt(val)));
-		// roots.foreach(root -> System.out.println(root));
-		//roots.collect().forEach(System.out::println);
-
-		/*  Count function and vanilla count
-		System.out.println(roots.count());
-		JavaRDD<Long> counter = OGIntegers.map(val -> 1L);
-		Long countRes = counter.reduce((val1, val2) -> val1 + val2);
-		System.out.println("Count: " + countRes);
-		 */
-
-		List<String> logData = new ArrayList<>();
-		logData.add("WARN: Tuesday 4 September 0405");
-		logData.add("ERROR: Tuesday 4 September 0408");
-		logData.add("FATAL: Wednesday 5 September 1632");
-		logData.add("ERROR: Friday 7 September 1854");
-		logData.add("WARN: Saturday 8 September 1942");
 		
-		/* save full log in tuple form
-		JavaPairRDD<String, String> logPairs = sc.parallelize(logData).mapToPair(rawVal -> {
-			String[] cols = rawVal.split(":");
-			String level = cols[0].trim();
-			String date = cols[1].trim();
+		JavaRDD<String> initRDD = sc.textFile("s3://udemysparkbuck/input.txt");
+		
+		JavaRDD<String> sentencesOnly = initRDD
+				.map(sentence -> sentence.replaceAll("[^a-zA-Z\\s]", "").toLowerCase())
+					.filter(sentence -> sentence.trim().length() > 0);
 			
-			return new Tuple2<>(level, date);
-		});
-		*/
+			JavaRDD<String> wordsOnly = sentencesOnly
+					.flatMap(val -> Arrays.asList(val.split(" ")).iterator())
+					.filter(word -> word.trim().length() > 0);
+					
+			JavaRDD<String> interestingWords = wordsOnly.filter(word -> Util.isNotBoring(word));
+					
+			JavaPairRDD<String, Long> wordCountTotals = interestingWords
+					.mapToPair(word -> new Tuple2<String, Long>(word, 1L))
+					.reduceByKey((val1, val2) -> val1 + val2);
+			
+			JavaPairRDD<Long, String> totalsSwitchedSorted = wordCountTotals
+					.mapToPair(tup -> new Tuple2<Long, String>(tup._2, tup._1))
+					.sortByKey(false);
+			
+			totalsSwitchedSorted.take(10).forEach(System.out::println);
 
-		//count log message instances
-		JavaPairRDD<String, Long>  logInstances = sc.parallelize(logData).mapToPair(rawVal -> {
-			String level = rawVal.split(":")[0];
-			return new Tuple2<>(level, 1L);
-		});
-
-		logInstances.reduceByKey((val1, val2) -> val1 + val2)
-			.foreach(tup -> System.out.println("Message: " + tup._1 + ", Count: " + tup._2));
-
-		//Flat Map and Filter
-		JavaRDD<String> sentences = sc.parallelize(logData);
-		JavaRDD<String> words = sentences.flatMap(val -> Arrays.asList(val.split(" ")).iterator());
-
-		JavaRDD<String> filteredWords = words.filter(word -> word.length() > 1);
-
-		filteredWords.foreach(val -> System.out.println(val));
-		sc.close();
 	}
+
 }
