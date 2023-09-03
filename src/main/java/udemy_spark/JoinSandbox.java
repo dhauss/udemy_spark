@@ -8,6 +8,7 @@ import org.apache.log4j.Logger;
 import org.apache.spark.SparkConf;
 import org.apache.spark.api.java.JavaPairRDD;
 import org.apache.spark.api.java.JavaSparkContext;
+import org.apache.spark.api.java.Optional;
 
 import scala.Tuple2;
 
@@ -35,18 +36,31 @@ public class JoinSandbox {
 		JavaPairRDD<Integer, String> users = sc.parallelizePairs(usersRaw);
 		
 		//inner join
-		JavaPairRDD<Integer, Tuple2<Integer, String>> userVisits = visits.join(users);
+		JavaPairRDD<Integer, Tuple2<Integer, String>> innerJoin = visits.join(users);
+		innerJoin.foreach(entry -> System.out.println(entry));
 		
-		userVisits.foreach(entry -> System.out.println(entry));
+		//left outer join
+		JavaPairRDD<Integer, Tuple2<Integer, Optional<String>>> leftOuterJoin = visits.leftOuterJoin(users);
+		//optional 'orElse" use case
+		leftOuterJoin.foreach(entry ->
+			System.out.println(entry._1 + ": " + entry._2._2.orElse("blank").toUpperCase())
+		);
+		
+		//right outer join
+		JavaPairRDD<Integer, Tuple2<Optional<Integer>, String>> rightOuterJoin = visits.rightOuterJoin(users);
+		rightOuterJoin.foreach(entry ->
+			System.out.println(entry._1 + ": " + entry._2._2 + ", " + entry._2._1.orElse(0))
+					);
+		
+		//full outer join
+		JavaPairRDD<Integer, Tuple2<Optional<Integer>, Optional<String>>> fullOuterJoin = visits.fullOuterJoin(users);
+		fullOuterJoin.foreach(entry -> System.out.println(entry));
+		
+		//cartesian join
+		JavaPairRDD<Tuple2<Integer, Integer>, Tuple2<Integer, String>> cartesianJoin = visits.cartesian(users);
+		cartesianJoin.foreach(entry -> System.out.println(entry));
 
-		
-		
 		sc.close();
-
-
-
-
-
 	}
 
 }
