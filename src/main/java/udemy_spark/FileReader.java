@@ -15,7 +15,7 @@ import scala.Tuple2;
 public class FileReader {
 
 	public static void main(String[] args) {
-		Logger.getLogger("org.apache").setLevel(Level.WARN);
+		Logger.getLogger("org").setLevel(Level.WARN);
 		SparkConf conf = new SparkConf().setAppName("fileReader").setMaster("local[*]");
 		JavaSparkContext sc = new JavaSparkContext(conf);
 		

@@ -22,7 +22,7 @@ public class Sandbox {
 		inputData.add(398);
 		inputData.add(4);
 
-		Logger.getLogger("org.apache").setLevel(Level.WARN);
+		Logger.getLogger("org").setLevel(Level.WARN);
 		SparkConf conf =  new SparkConf().setAppName("startingSpark").setMaster("local[*]");
 		JavaSparkContext sc = new JavaSparkContext(conf);
 

@@ -14,7 +14,7 @@ import scala.Tuple2;
 public class Main {
 
 	public static void main(String[] args) {
-		Logger.getLogger("org.apache").setLevel(Level.WARN);
+		Logger.getLogger("org").setLevel(Level.WARN);
 		SparkConf conf = new SparkConf().setAppName("EMRCluster");
 		JavaSparkContext sc = new JavaSparkContext(conf);
 		
