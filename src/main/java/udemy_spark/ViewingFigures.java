@@ -20,21 +20,61 @@ public class ViewingFigures
 	@SuppressWarnings("resource")
 	public static void main(String[] args)
 	{
-		System.setProperty("hadoop.home.dir", "c:/hadoop");
-		Logger.getLogger("org.apache").setLevel(Level.WARN);
+		Logger.getLogger("org").setLevel(Level.WARN);
 
 		SparkConf conf = new SparkConf().setAppName("startingSpark").setMaster("local[*]");
 		JavaSparkContext sc = new JavaSparkContext(conf);
 		
-		// Use true to use hardcoded data identical to that in the PDF guide.
+		// Use true to use hardcoded data.
 		boolean testMode = true;
 		
 		JavaPairRDD<Integer, Integer> viewData = setUpViewDataRdd(sc, testMode);
 		JavaPairRDD<Integer, Integer> chapterData = setUpChapterDataRdd(sc, testMode);
 		JavaPairRDD<Integer, String> titlesData = setUpTitlesDataRdd(sc, testMode);
-
-		// TODO - over to you!
 		
+		viewData = viewData.distinct();
+		
+		JavaPairRDD<Integer, Tuple2<Integer, Integer>> chapterUserCourse = viewData
+				.mapToPair(row -> new Tuple2<>(row._2, row._1))
+				.join(chapterData);
+		
+		JavaPairRDD<Integer, Long> chapCountByUser = chapterUserCourse
+				.mapToPair(row -> {
+				Tuple2<Integer, Integer> userCourseTup = new Tuple2<>(row._2._1, row._2._2);
+				return new Tuple2<Tuple2<Integer, Integer>, Long>(userCourseTup, 1L);
+				})
+				.reduceByKey((val1, val2) -> val1 + val2)
+				.mapToPair(entry -> new Tuple2<>(entry._1._2, entry._2));
+		
+		JavaPairRDD<Integer, Integer> chapterCount = chapterData
+				.mapToPair(row -> new Tuple2<Integer, Integer>(row._2, 1))
+				.reduceByKey((val1, val2) -> val1 + val2);
+		
+		JavaPairRDD<Integer, Double> chapCountPercent = chapCountByUser
+				.join(chapterCount)
+				.mapToPair(entry -> new Tuple2<>(entry._1, (double) entry._2._1/entry._2._2));
+		
+		JavaPairRDD<Integer, Long> finalScores = chapCountPercent
+				.mapValues(val -> {
+					if(val > .9) return 10L;
+					else if(val > .5) return 4L;
+					else if(val > .25) return 2L;
+					else return 0L;
+				})
+				.reduceByKey((val1, val2) -> val1 + val2);
+		
+		JavaPairRDD<Integer, Tuple2<Long, String>> addTitles = finalScores
+				.join(titlesData);
+		
+		JavaPairRDD<Long, String> prettyOut = addTitles
+				.mapToPair(entry -> new Tuple2<Long, String>(entry._2._1, entry._2._2));
+		
+		prettyOut.sortByKey(false).collect().forEach(entry ->
+			System.out.println(entry._2 + ": " + entry._1));
+		
+		
+
+				
 		sc.close();
 	}
 
