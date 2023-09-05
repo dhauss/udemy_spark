@@ -2,6 +2,7 @@ package udemy_spark;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Scanner;
 
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
@@ -26,11 +27,14 @@ public class ViewingFigures
 		JavaSparkContext sc = new JavaSparkContext(conf);
 
 		// Use true to use hardcoded data.
-		boolean testMode = true;
+		boolean testMode = false;
 
 		JavaPairRDD<Integer, Integer> viewData = setUpViewDataRdd(sc, testMode);
 		JavaPairRDD<Integer, Integer> chapterData = setUpChapterDataRdd(sc, testMode);
 		JavaPairRDD<Integer, String> titlesData = setUpTitlesDataRdd(sc, testMode);
+		
+		//cache for parallelized jobs (Stage 2 and Stage 4 on DAG)
+		chapterData.cache();
 
 		viewData = viewData.distinct();
 
@@ -71,6 +75,10 @@ public class ViewingFigures
 
 		prettyOut.sortByKey(false).collect().forEach(entry ->
 			System.out.println(entry._2 + ": " + entry._1));
+		
+		//hack to check Spark job UI on localhost:4040
+		Scanner scanner = new Scanner(System.in);
+		scanner.nextLine();
 	
 		sc.close();
 	}
