@@ -27,7 +27,7 @@ public class ViewingFigures
 		JavaSparkContext sc = new JavaSparkContext(conf);
 
 		// Use true to use hardcoded data.
-		boolean testMode = false;
+		boolean testMode = true;
 
 		JavaPairRDD<Integer, Integer> viewData = setUpViewDataRdd(sc, testMode);
 		JavaPairRDD<Integer, Integer> chapterData = setUpChapterDataRdd(sc, testMode);
