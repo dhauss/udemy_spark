@@ -45,8 +45,14 @@ public class SparkSQLSandbox {
 		
 		//temporary view, create in memory table to query with SQL statements
 		dataset.createOrReplaceTempView("my_students_view");
-		Dataset<Row> res = spark.sql("select * from my_students_view where subject = 'French' ");
-		res.show();
+		Dataset<Row> res = spark.sql("select score, year from my_students_view where subject = 'French' ");
+		
+		Dataset<Row> max = spark.sql("select max(score) from my_students_view where subject = 'French' ");
+		max.show();
+		
+		Dataset<Row> years = spark.sql("select distinct(year) from my_students_view order by year desc");
+		years.show();
+		
 		spark.close();
 	};
 }
