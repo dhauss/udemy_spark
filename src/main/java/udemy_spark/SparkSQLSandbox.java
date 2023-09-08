@@ -36,11 +36,17 @@ public class SparkSQLSandbox {
 		modernArtSQL.show();
 
 		//column class approach. NOTE static import of functions to use col on second line of filter
+		/*
 		Column subjectColumn = dataset.col("subject");
 		Dataset<Row> modernArtCol = dataset
 				.filter(subjectColumn.equalTo("Modern Art").and(col("year").geq(2007)));
 		modernArtCol.show();
-
+		*/
+		
+		//temporary view, create in memory table to query with SQL statements
+		dataset.createOrReplaceTempView("my_students_view");
+		Dataset<Row> res = spark.sql("select * from my_students_view where subject = 'French' ");
+		res.show();
 		spark.close();
 	};
 }
